@@ -1,5 +1,8 @@
 
 require('./helper')
+let mkd = require('./mkdir')
+
+let co = require('co')
 let fs = require('fs').promise
 let express = require('express')
 let morgan = require('morgan')
@@ -11,8 +14,10 @@ let path = require('path')
 let mime = require('mime-types')
 //let stat = require('stat')
 
+var base_dir='files'
+
 function* remove(req, res) {
-	let filePath = path.join(__dirname, 'files', req.url)
+	let filePath = path.join(__dirname, base_dir, req.url)
 	let data = yield fs.unlink(filePath)
 	res.end()
 }
@@ -44,15 +49,34 @@ function* create(req, res) {
 	res.end()
 }
 
+function* createDIR(req, res) {
+    let filePath = path.join(__dirname, 'files', req.url)
+    let data = yield fs.open(filePath, "wx")
+    if(req.body){
+        let result = yield fs.writeFile(filePath, req.body)
+    }
+    res.end()
+}
+
+
+function* getFile(fileName) {
+    let filePath = path.join(__dirname, base_dir, fileName)
+    console.log("Fetching:" + filePath)
+    let data = yield fs.readFile(filePath)
+    return data
+}
 
 function* get(req, res) {
-	let filePath = path.join(__dirname, 'files', req.url)
-    console.log("Fetching:" + filePath)
-	let data = yield fs.readFile(filePath)
-	res.contentType(mime.lookup('text') )
-    res.setHeader('Content-Length', data.length)
-
-	res.end(data)
+	let data = yield getFile(req.url)
+    if(data){
+        res.contentType(mime.lookup('text') )
+        res.setHeader('Content-Length', data.length)
+        res.end(data)
+    }else{
+        res.writeHead(500)
+        res.end()
+    }
+    
 }
 
 
