@@ -17,6 +17,12 @@ function* remove(req, res) {
 	res.end()
 }
 
+function* head(req,res){
+    let data = yield fs.readFile(filePath)
+    res.contentType(mime.lookup('text') )
+    res.setHeader('Content-Length', res.body.length)
+    res.end()
+}
 
 function* update(req, res) {
 	let filePath = path.join(__dirname, 'files', req.url)
@@ -24,6 +30,10 @@ function* update(req, res) {
 	res.end()
 }
 
+function* post(req, res) {
+    res.
+    res.end()
+}
 
 function* create(req, res) {
     let filePath = path.join(__dirname, 'files', req.url)
@@ -35,10 +45,12 @@ function* create(req, res) {
 }
 
 
-function* routeHandlerRead(req, res) {
+function* get(req, res) {
 	let filePath = path.join(__dirname, 'files', req.url)
+    console.log("Fetching:" + filePath)
 	let data = yield fs.readFile(filePath)
 	res.contentType(mime.lookup('text') )
+    res.setHeader('Content-Length', data.length)
 
 	res.end(data)
 }
@@ -54,7 +66,9 @@ function* main() {
             res.end(e.stack)
         })
     })
-    app.get('*', wrap(routeHandlerRead))
+
+    app.head('*', wrap(head))
+    app.get('*', wrap(get))
     app.put('*', wrap(create))
     app.post('*', bodyParser(), wrap(update))
     app.del('*', wrap(remove))	
